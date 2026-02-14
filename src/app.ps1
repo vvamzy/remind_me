@@ -12,13 +12,40 @@ function New-Brush($r,$g,$b){
 function Lerp($a,$b,$t){ return [math]::Round($a + ($b-$a)*$t) }
 
 $AppName = 'TodoTimer'
-$BaseDir = Split-Path -Parent $PSCommandPath
-$StorageDir = Join-Path $BaseDir '..\data' | Resolve-Path -ErrorAction SilentlyContinue
-if(-not $StorageDir){
-  $StorageDir = Join-Path (Split-Path -Parent $PSCommandPath) '..\data'
+# Resolve a writable data directory with fallbacks
+function Resolve-WritableDir {
+  param([string[]]$Candidates)
+  $localFallback = $null
+  try {
+    $localBase = Split-Path -Parent $PSCommandPath
+    if(-not [string]::IsNullOrWhiteSpace($localBase)){
+      $localFallback = Join-Path $localBase '..\data'
+    }
+  } catch { }
+  foreach($c in $Candidates){
+    try {
+      if(-not (Test-Path $c)){ New-Item -Type Directory -Path $c -ErrorAction Stop | Out-Null }
+      # probe write access
+      $probe = Join-Path $c ".probe"
+      "ok" | Set-Content -Path $probe -Encoding UTF8 -ErrorAction Stop
+      Remove-Item -Path $probe -Force -ErrorAction Stop
+      return $c
+    } catch { continue }
+  }
+  if($localFallback){
+    try {
+      if(-not (Test-Path $localFallback)){ New-Item -Type Directory -Path $localFallback -ErrorAction Stop | Out-Null }
+      return $localFallback
+    } catch { }
+  }
+  return (Join-Path (Get-Location) ".runtime\$AppName")
 }
+$StorageDir = Resolve-WritableDir @(
+  (Join-Path $env:LOCALAPPDATA $AppName),
+  (Join-Path $env:APPDATA $AppName),
+  (Join-Path $env:TEMP $AppName)
+)
 $StorageFile = Join-Path $StorageDir 'state.json'
-if(-not (Test-Path $StorageDir)){ New-Item -Type Directory -Path $StorageDir | Out-Null }
 
 function Load-State {
   if(Test-Path $StorageFile){
@@ -111,10 +138,9 @@ $script:Settings = Load-Settings
 $script:Theme = Build-Theme (Resolve-Mode $script:Settings.themeMode)
 
 # logging
-$LogRoot = Join-Path $env:LOCALAPPDATA $AppName
-if(-not (Test-Path $LogRoot)){ New-Item -Type Directory -Path $LogRoot | Out-Null }
+$LogRoot = $StorageDir
 $LogDir = Join-Path $LogRoot 'logs'
-if(-not (Test-Path $LogDir)){ New-Item -Type Directory -Path $LogDir | Out-Null }
+if(-not (Test-Path $LogDir)){ New-Item -Type Directory -Path $LogDir -ErrorAction SilentlyContinue | Out-Null }
 $LogFile = Join-Path $LogDir 'todotimer.log'
 function Get-LogLevelValue($lvl){
   switch ($lvl.ToUpper()) { 'DEBUG' {0} 'INFO' {1} 'WARN' {2} 'ERROR' {3} default {1} }
@@ -501,4 +527,13 @@ $timer.Add_Tick({
 $timer.Start()
 
 Refresh-List
-[void]$window.ShowDialog()
+try {
+  [void]$window.ShowDialog()
+} catch {
+  $msg = "Unhandled exception: " + $_.Exception.Message
+  Write-Log 'ERROR' ($msg + "`n" + $_.ScriptStackTrace)
+  try {
+    Add-Type -AssemblyName PresentationFramework | Out-Null
+    [System.Windows.MessageBox]::Show($msg, 'Todo Timer', 'OK', 'Error') | Out-Null
+  } catch {}
+}

@@ -7,7 +7,7 @@ Futuristic, minimal Windows todo app with per-task countdowns and a green→red 
 - Progress bar color shifts from green to red as time elapses
 - Light / Dark / Auto theme with neon accents
 - Mark complete, delete, and filter by All / Active / Done
-- Local persistence of tasks and theme
+- Local persistence of tasks and theme (per-user profile)
 
 ## Run Locally
 PowerShell 7+ on Windows:
@@ -17,7 +17,7 @@ pwsh -NoProfile -ExecutionPolicy Bypass -File .\src\app.ps1
 ```
 
 ## Logging
-- File-based logging writes to `%LOCALAPPDATA%\TodoTimer\logs\todotimer.log`.
+- File-based logging writes to `%APPDATA%\TodoTimer\logs\todotimer.log` (falls back to `%LOCALAPPDATA%`, `%TEMP%`, or a local `.runtime/TodoTimer/logs` if needed).
 - Default level is `INFO`. Set `TODO_TIMER_LOG_LEVEL` to `DEBUG`, `INFO`, `WARN`, or `ERROR`.
 - The log auto-rotates at ~2 MB.
 
