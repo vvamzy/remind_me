@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo Timer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Todo Timer</h1>
+      <div class="version" id="app-version"></div>
+    </header>
+    <main class="container">
+      <section class="new-todo">
+        <input id="todo-title" class="text-input" type="text" placeholder="What do you need to do?" />
+        <div class="time-row">
+          <label>
+            Duration
+            <input id="todo-mins" class="num-input" type="number" min="0" step="1" value="25" /> mins
+          </label>
+          <label>
+            Seconds
+            <input id="todo-secs" class="num-input" type="number" min="0" max="59" step="1" value="0" /> s
+          </label>
+          <button id="add-btn" class="btn primary">Add</button>
+        </div>
+      </section>
+
+      <section class="filters">
+        <button data-filter="all" class="chip active">All</button>
+        <button data-filter="active" class="chip">Active</button>
+        <button data-filter="done" class="chip">Done</button>
+        <button id="clear-done" class="chip danger">Clear Done</button>
+      </section>
+
+      <ul id="todo-list" class="todo-list"></ul>
+    </main>
+
+    <template id="todo-item-template">
+      <li class="todo-item">
+        <div class="left">
+          <input type="checkbox" class="toggle" />
+          <span class="title"></span>
+          <span class="badge due"></span>
+        </div>
+        <div class="right">
+          <div class="countdown">
+            <div class="bar"><span class="fill"></span></div>
+            <div class="time-text"></div>
+          </div>
+          <button class="btn small ghost edit">Edit</button>
+          <button class="btn small danger delete">Delete</button>
+        </div>
+      </li>
+    </template>
+
+    <script src="./renderer.js"></script>
+  </body>
+  </html>

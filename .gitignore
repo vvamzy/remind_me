@@ -1,0 +1,12 @@
+node_modules
+dist
+*.log
+*.lock
+data
+.vs
+.vscode
+.DS_Store
+*.exe
+*.msi
+*.ico
+*.png

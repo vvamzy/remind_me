@@ -1,0 +1,32 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#00e5ff" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b1220"/>
+      <stop offset="100%" stop-color="#0d0f12"/>
+    </linearGradient>
+    <linearGradient id="stroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00e5ff"/>
+      <stop offset="100%" stop-color="#14a3ff"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" fill="url(#bg)"/>
+  <rect x="56" y="56" width="400" height="400" rx="44" ry="44" fill="none" stroke="url(#stroke)" stroke-width="10" filter="url(#glow)"/>
+  <circle cx="256" cy="210" r="180" fill="url(#g)"/>
+  <g fill="none" stroke="#00e5ff" stroke-width="16" stroke-linecap="round">
+    <path d="M176 224 h160"/>
+    <path d="M176 268 h120"/>
+  </g>
+  <text x="256" y="360" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="140" font-weight="700" fill="#e7edf3">TT</text>
+</svg>

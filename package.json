@@ -1,0 +1,16 @@
+{
+  "name": "todo-list-win",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Windows Todo app with countdown and color progression (Electron).",
+  "main": "main.js",
+  "author": "Miriyala",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "postinstall": "node -e \"try{require('fs').mkdirSync('dist',{recursive:true})}catch(e){}\""
+  },
+  "devDependencies": {
+    "electron": "^31.2.0"
+  }
+}
