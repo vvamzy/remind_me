@@ -16,6 +16,11 @@ PowerShell 7+ on Windows:
 pwsh -NoProfile -ExecutionPolicy Bypass -File .\src\app.ps1
 ```
 
+## Logging
+- File-based logging writes to `%LOCALAPPDATA%\TodoTimer\logs\todotimer.log`.
+- Default level is `INFO`. Set `TODO_TIMER_LOG_LEVEL` to `DEBUG`, `INFO`, `WARN`, or `ERROR`.
+- The log auto-rotates at ~2 MB.
+
 ## Build (GitHub Actions)
 On every push and PR, a Windows workflow:
 - Generates an icon from `assets/icon.svg`

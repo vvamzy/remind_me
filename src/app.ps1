@@ -110,6 +110,30 @@ function Build-Theme([string]$mode){
 $script:Settings = Load-Settings
 $script:Theme = Build-Theme (Resolve-Mode $script:Settings.themeMode)
 
+# logging
+$LogRoot = Join-Path $env:LOCALAPPDATA $AppName
+if(-not (Test-Path $LogRoot)){ New-Item -Type Directory -Path $LogRoot | Out-Null }
+$LogDir = Join-Path $LogRoot 'logs'
+if(-not (Test-Path $LogDir)){ New-Item -Type Directory -Path $LogDir | Out-Null }
+$LogFile = Join-Path $LogDir 'todotimer.log'
+function Get-LogLevelValue($lvl){
+  switch ($lvl.ToUpper()) { 'DEBUG' {0} 'INFO' {1} 'WARN' {2} 'ERROR' {3} default {1} }
+}
+$script:LogLevel = $env:TODO_TIMER_LOG_LEVEL
+if(-not $script:LogLevel -or $script:LogLevel -eq ''){ $script:LogLevel = 'INFO' }
+function Write-Log($level, $message){
+  try {
+    if((Get-LogLevelValue $level) -lt (Get-LogLevelValue $script:LogLevel)){ return }
+    $ts = (Get-Date).ToString('s')
+    $line = "$ts [$level] $message"
+    $size = 0
+    if(Test-Path $LogFile){ $size = (Get-Item $LogFile).Length }
+    if($size -gt 2097152){ Move-Item -Force $LogFile ($LogFile + '.1') -ErrorAction SilentlyContinue }
+    $line | Add-Content -Path $LogFile -Encoding UTF8
+  } catch { }
+}
+Write-Log 'INFO' 'App starting'
+
 $window = New-Object Windows.Window
 $window.Title = 'Todo Timer'
 $window.Width = 900
@@ -320,17 +344,20 @@ function New-TodoPanel($todo){
     $panel.Tag.Todo.doneAt = [DateTimeOffset]::Now.ToUnixTimeMilliseconds()
     Save-State $script:Todos
     Update-Panel $panel
+    Write-Log 'INFO' ("Completed todo: " + $panel.Tag.Todo.title)
   })
   $chk.Add_Unchecked({
     $panel.Tag.Todo.done = $false
     $panel.Tag.Todo.doneAt = $null
     Save-State $script:Todos
     Update-Panel $panel
+    Write-Log 'INFO' ("Reopened todo: " + $panel.Tag.Todo.title)
   })
   $btnDel.Add_Click({
     $script:Todos = $script:Todos | Where-Object { $_.id -ne $panel.Tag.Todo.id }
     $itemsPanel.Children.Remove($panel) | Out-Null
     Save-State $script:Todos
+    Write-Log 'INFO' ("Deleted todo: " + $todo.title)
   })
 
   Update-Panel $panel
@@ -404,6 +431,7 @@ $cbTheme.Add_SelectionChanged({
   $script:Settings.themeMode = $sel
   Save-Settings $script:Settings
   $script:Theme = Build-Theme (Resolve-Mode $sel)
+  Write-Log 'INFO' ("Theme changed to " + $sel)
   $window.Background = $script:Theme.WindowBg
   $window.Foreground = $script:Theme.Text
   $versionText.Foreground = $script:Theme.Muted
@@ -450,6 +478,7 @@ $btnAdd.Add_Click({
   Save-State $script:Todos
   $tbTitle.Text = ''
   Refresh-List
+  Write-Log 'INFO' ("Added todo: " + $title + " (" + $total + " ms)")
 })
 
 $cbFilter.Add_SelectionChanged({ Refresh-List })
@@ -457,6 +486,7 @@ $btnClearDone.Add_Click({
   $script:Todos = $script:Todos | Where-Object { -not $_.done }
   Save-State $script:Todos
   Refresh-List
+  Write-Log 'INFO' 'Cleared completed todos'
 })
 
 $timer = New-Object Windows.Threading.DispatcherTimer
