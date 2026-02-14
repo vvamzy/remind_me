@@ -58,6 +58,32 @@ function Save-State {
   $Todos | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 $StorageFile
 }
 
+[ScriptBlock]$EnsureTodo = {
+  param($o)
+  if($null -eq $o){ return $null }
+  $props = $o.PSObject.Properties
+  function GetProp([string]$name, $def){
+    if($props.Match($name).Count -gt 0 -and $null -ne $o.$name){ return $o.$name } else { return $def }
+  }
+  $now = [DateTimeOffset]::Now.ToUnixTimeMilliseconds()
+  $id = GetProp 'id' ([guid]::NewGuid().ToString('n'))
+  $title = GetProp 'title' ''
+  $totalMs = [int64](GetProp 'totalMs' 0)
+  $createdAt = [int64](GetProp 'createdAt' $now)
+  $dueAt = [int64](GetProp 'dueAt' ($createdAt + $totalMs))
+  $done = [bool](GetProp 'done' $false)
+  $doneAt = GetProp 'doneAt' $null
+  return [pscustomobject]@{
+    id = $id
+    title = $title
+    totalMs = $totalMs
+    createdAt = $createdAt
+    dueAt = $dueAt
+    done = $done
+    doneAt = $doneAt
+  }
+}
+
 [string]$SettingsFile = Join-Path $StorageDir 'settings.json'
 function Load-Settings {
   if(Test-Path $SettingsFile){
@@ -281,9 +307,10 @@ $itemsPanel = New-Object Windows.Controls.StackPanel
 $sv.Content = $itemsPanel
 
 $script:Todos = @()
-Load-State | ForEach-Object { $script:Todos += $_ }
+Load-State | ForEach-Object { $script:Todos += (&$EnsureTodo $_) }
 
 function New-TodoPanel($todo){
+  $todo = &$EnsureTodo $todo
   $panel = New-Object Windows.Controls.Border
   $panel.Margin = '0,0,0,4'
   $panel.Background = $script:Theme.PanelBg
